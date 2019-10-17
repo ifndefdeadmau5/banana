@@ -39,31 +39,28 @@ function PrivateRoute({ children, ...rest }) {
 }
 
 // https://material-ui.com/guides/composition/#button
-const Link = React.forwardRef((props, ref) => <RouterLink innerRef={ref} {...props} />);
+const Link = React.forwardRef((props, ref) => (
+  <RouterLink innerRef={ref} {...props} />
+));
 
 export default function App() {
   return (
     <StoreProvider>
       <Router>
         <div>
-          <Typography position="static">
-            <AppBar position="static">
-              <Toolbar>
-                <Button component={Link} to="/">
-                  Home
-                </Button>
-                <Button component={Link} to="/login">
-                  Login
-                </Button>
-                <Button component={Link} to="/users">
-                  Users
-                </Button>
-              </Toolbar>
-            </AppBar>
-          </Typography>
-          <nav>
-            <ul></ul>
-          </nav>
+          <AppBar position="static">
+            <Toolbar>
+              <Button component={Link} to="/">
+                Home
+              </Button>
+              <Button component={Link} to="/login">
+                Login
+              </Button>
+              <Button component={Link} to="/users">
+                Users
+              </Button>
+            </Toolbar>
+          </AppBar>
 
           {/* 스위치는 라우트를 순서대로 훑다가 매칭되는 제일 첫번째 path에 해당되는 컴퍼넌트를 렌더링한다. */}
           <Switch>
