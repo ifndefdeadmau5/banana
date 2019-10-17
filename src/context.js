@@ -13,7 +13,7 @@ export const StoreProvider = ({ children }) => {
   // createStore 에서 생성된 객체의:
   // - 프로퍼티는 자동적으로 observable 상태가 되며,
   // - getter는 computed 프로퍼티
-  // = method  action이 된다.
+  // - method는 action이 된다.
   const store = useLocalStore(createStore);
 
   return (
