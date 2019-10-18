@@ -4,7 +4,9 @@ import Paper from '@material-ui/core/Paper';
 import Button from '@material-ui/core/Button';
 import styled from 'styled-components';
 import GoogleLogin from 'react-google-login';
+import { gql } from 'apollo-boost';
 import { useObserver } from 'mobx-react-lite';
+import { useQuery } from '@apollo/react-hooks';
 import { storeContext } from './context';
 
 // styled-components 로 스타일링한 리액트 컴포넌트
@@ -17,12 +19,18 @@ const Wrapper = styled(Paper)`
   padding: 16px;
 `;
 
+const GET_LIST = gql`
+  query GetUrl {
+    getList
+  }
+`;
+
 export default () => {
   // 제어 컴포넌트(Controlled Component)를 사용하기 위한 state 를 정의하고 있다.
   // (https://ko.reactjs.org/docs/forms.html)
   const [id, setId] = useState('');
   const [password, setPassword] = useState('');
-
+  const { loading, error, data } = useQuery(GET_LIST, { fetchPolicy: 'network-only' });
   // useContext 는 가장 가까운 상위의 Provider의 value를 참조해서, 그 값을 사용한다
   const store = React.useContext(storeContext);
 
