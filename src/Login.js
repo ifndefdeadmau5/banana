@@ -3,10 +3,13 @@ import TextField from '@material-ui/core/TextField';
 import Paper from '@material-ui/core/Paper';
 import Button from '@material-ui/core/Button';
 import styled from 'styled-components';
-import GoogleLogin from 'react-google-login';
+import Avatar from '@material-ui/core/Avatar';
+import Typography from '@material-ui/core/Typography';
 import { gql } from 'apollo-boost';
+import GoogleLogin from 'react-google-login';
 import { useObserver } from 'mobx-react-lite';
-import { useQuery } from '@apollo/react-hooks';
+import { useMutation } from '@apollo/react-hooks';
+
 import { storeContext } from './context';
 
 // styled-components 로 스타일링한 리액트 컴포넌트
@@ -19,29 +22,40 @@ const Wrapper = styled(Paper)`
   padding: 16px;
 `;
 
-const GET_LIST = gql`
-  query GetUrl {
-    getList
+const SIGN_UP = gql`
+  mutation SignUp($name: String, $password: String) {
+    signUp(name: $name, password: $password)
   }
 `;
-
 export default () => {
   // 제어 컴포넌트(Controlled Component)를 사용하기 위한 state 를 정의하고 있다.
   // (https://ko.reactjs.org/docs/forms.html)
-  const [id, setId] = useState('');
+  const [name, setName] = useState('');
+  const [imgUrl, setImgUrl] = useState('');
   const [password, setPassword] = useState('');
-  const { loading, error, data } = useQuery(GET_LIST, { fetchPolicy: 'network-only' });
+
+  const [signUp, { data }] = useMutation(SIGN_UP);
+
+  console.log('data');
+  console.log(data);
+
   // useContext 는 가장 가까운 상위의 Provider의 value를 참조해서, 그 값을 사용한다
   const store = React.useContext(storeContext);
 
   const handleClick = () => {
-    console.log(id);
+    signUp({ variables: { name, password } });
+    console.log(name);
     console.log(password);
   };
 
-  const responseGoogle = ({ profileObj: { email } }) => {
+  const responseGoogle = ({
+    profileObj: { givenName, imageUrl },
+    googleId,
+  }) => {
+    setName(givenName);
+    setImgUrl(imageUrl);
     // MobX Action 호출
-    store.setAuth(email);
+    // store.setAuth(email);
   };
 
   // useObserver 로 감싼 부분은 스토어에서 일어난 변경을 감지해서 필요할 때 리렌더링해준다.
@@ -56,12 +70,18 @@ export default () => {
     return (
       <div>
         <Wrapper>
+          {name && (
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+              <Avatar alt="Remy Sharp" src={imgUrl} />
+              <Typography>{name}</Typography>
+            </div>
+          )}
           <TextField
-            name="id"
-            label="아이디"
-            value={id}
+            name="name"
+            label="이름"
+            value={name}
             onChange={e => {
-              setId(e.target.value);
+              setName(e.target.value);
             }}
           />
           <TextField

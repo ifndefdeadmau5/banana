@@ -13,6 +13,7 @@ import ApolloClient from 'apollo-boost';
 import { ApolloProvider } from '@apollo/react-hooks';
 import StoreProvider from './context';
 import Login from './Login';
+import File from './File';
 import './App.css';
 import { storeContext } from './context';
 
@@ -72,9 +73,9 @@ export default function App() {
             <Route path="/login">
               <Login />
             </Route>
-            <PrivateRoute path="/users">
-              <Users />
-            </PrivateRoute>
+            <Route path="/users">
+              <File />
+            </Route>
             <PrivateRoute path="/">
               <Home />
             </PrivateRoute>
@@ -87,8 +88,4 @@ export default function App() {
 
 function Home() {
   return <h2>Home</h2>;
-}
-
-function Users() {
-  return <h2>Users</h2>;
 }
