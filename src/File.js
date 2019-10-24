@@ -16,6 +16,7 @@ import IconButton from '@material-ui/core/IconButton';
 import FolderIcon from '@material-ui/icons/Folder';
 import DeleteIcon from '@material-ui/icons/Delete';
 import DownloadIcon from '@material-ui/icons/CloudDownload';
+import LinearProgress from '@material-ui/core/LinearProgress';
 
 const Root = styled.div({
   padding: '1em',
@@ -42,7 +43,7 @@ const GET_DOWNLOAD_URL = gql`
 export default (props) => {
   const [file, setFile] = useState({});
   const [getPresignedUrl, { data = {} }] = useLazyQuery(GET_URL);
-  const [getDownloadUrl, { data: downloadData = {} }] = useLazyQuery(GET_DOWNLOAD_URL);
+  const [getDownloadUrlQuery, { data : { getDownloadUrl } = {} }] = useLazyQuery(GET_DOWNLOAD_URL);
   const onDrop = useCallback(acceptedFiles => {
     const accentedFile = acceptedFiles[0];
 
@@ -73,18 +74,17 @@ export default (props) => {
   }, [data]);
 
   useEffect(() => {
-    if (!downloadData.getDownloadUrl) return;
-    console.log('data');
-    console.log(downloadData.getDownloadUrl);
-  }, [downloadData]);
+    if (!getDownloadUrl) return;
+    window.location.href = getDownloadUrl;
+  }, [getDownloadUrl]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop });
-  const { loading, error, data: getListData = {} } = useQuery(GET_LIST, {
+  const { loading, error, data: { getList } = {} } = useQuery(GET_LIST, {
     fetchPolicy: 'network-only',
   });
 
   const handleDownload = (key) => () => {
-    getDownloadUrl({ variables: { key }});
+    getDownloadUrlQuery({ variables: { key }});
   };
 
   return (
@@ -97,9 +97,10 @@ export default (props) => {
           <p>Drag 'n' drop some files here, or click to select files</p>
         )}
       </div>
+      {loading && <LinearProgress color="secondary" variant="query" />}
       <List>
-        {getListData.getList &&
-          getListData.getList.map(v => (
+        {getList &&
+          getList.map(v => (
             <ListItem>
               <ListItemAvatar>
                 <Avatar>
