@@ -4,7 +4,7 @@ import { useDropzone } from 'react-dropzone';
 import axios from 'axios';
 import { gql } from 'apollo-boost';
 import { useQuery } from '@apollo/react-hooks';
-import { useLazyQuery } from "@apollo/react-hooks";
+import { useLazyQuery } from '@apollo/react-hooks';
 
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
@@ -15,6 +15,7 @@ import Avatar from '@material-ui/core/Avatar';
 import IconButton from '@material-ui/core/IconButton';
 import FolderIcon from '@material-ui/icons/Folder';
 import DeleteIcon from '@material-ui/icons/Delete';
+import DownloadIcon from '@material-ui/icons/CloudDownload';
 
 const Root = styled.div({
   padding: '1em',
@@ -32,43 +33,59 @@ const GET_URL = gql`
   }
 `;
 
-export default () => {
-  // const { data: urlData } = useQuery(GET_URL, {
-  //   fetchPolicy: 'network-only',
-  //   variables: {
-  //     filename: 'Sungmin Park _wanted_resume 2019-08-28 11.39.46 (1).pdf',
-  //   },
-  // });
+const GET_DOWNLOAD_URL = gql`
+  query GetDownloadUrl($key: String) {
+    getDownloadUrl(key: $key)
+  }
+`;
 
+export default (props) => {
   const [file, setFile] = useState({});
-  const [getPresignedUrl, { data = {} }] = useLazyQuery(
-    GET_URL,
-  );
+  const [getPresignedUrl, { data = {} }] = useLazyQuery(GET_URL);
+  const [getDownloadUrl, { data: downloadData = {} }] = useLazyQuery(GET_DOWNLOAD_URL);
   const onDrop = useCallback(acceptedFiles => {
     const accentedFile = acceptedFiles[0];
 
-    getPresignedUrl({ variables: {
-      filename: accentedFile.name,
-      filetype: accentedFile.type,
-    }})
+    getPresignedUrl({
+      variables: {
+        filename: accentedFile.name,
+        filetype: accentedFile.type,
+      },
+    });
 
     setFile(accentedFile);
   }, []);
 
-  useEffect(() => {
-    console.log('data');
-    console.log(data);
-
+  const uploadFile = async () => {
     const options = {
       'Content-Type': file.type,
-    }
+    };
 
-    axios.put(data.getUrl, file, options);
-  }, [data])
+    const result = await axios.put(data.getUrl, file, options);
+    console.log(result);
+  };
+
+  useEffect(() => {
+    if (!data.getUrl) return;
+    console.log('data');
+    console.log(data.getUrl);
+    uploadFile();
+  }, [data]);
+
+  useEffect(() => {
+    if (!downloadData.getDownloadUrl) return;
+    console.log('data');
+    console.log(downloadData.getDownloadUrl);
+  }, [downloadData]);
+
   const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop });
   const { loading, error, data: getListData = {} } = useQuery(GET_LIST, {
     fetchPolicy: 'network-only',
   });
+
+  const handleDownload = (key) => () => {
+    getDownloadUrl({ variables: { key }});
+  };
 
   return (
     <Root>
@@ -91,6 +108,9 @@ export default () => {
               </ListItemAvatar>
               <ListItemText primary={v.Key} secondary={v.Size} />
               <ListItemSecondaryAction>
+                <IconButton edge="end" onClick={handleDownload(v.Key)}>
+                  <DownloadIcon />
+                </IconButton>
                 <IconButton edge="end" aria-label="delete">
                   <DeleteIcon />
                 </IconButton>
