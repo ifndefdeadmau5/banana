@@ -1,9 +1,10 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import styled from 'styled-components';
 import { useDropzone } from 'react-dropzone';
 import axios from 'axios';
 import { gql } from 'apollo-boost';
 import { useQuery } from '@apollo/react-hooks';
+import { useLazyQuery } from "@apollo/react-hooks";
 
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
@@ -26,31 +27,46 @@ const GET_LIST = gql`
 `;
 
 const GET_URL = gql`
-  query GetUrl($filename: String) {
-    getUrl(filename: $filename)
+  query GetUrl($filename: String, $filetype: String) {
+    getUrl(filename: $filename, filetype: $filetype)
   }
 `;
 
 export default () => {
-  const { data: urlData } = useQuery(GET_URL, {
-    fetchPolicy: 'network-only',
-    variables: {
-      filename: 'Sungmin Park _wanted_resume 2019-08-28 11.39.46 (1).pdf',
-    },
-  });
+  // const { data: urlData } = useQuery(GET_URL, {
+  //   fetchPolicy: 'network-only',
+  //   variables: {
+  //     filename: 'Sungmin Park _wanted_resume 2019-08-28 11.39.46 (1).pdf',
+  //   },
+  // });
+
+  const [file, setFile] = useState({});
+  const [getPresignedUrl, { data = {} }] = useLazyQuery(
+    GET_URL,
+  );
   const onDrop = useCallback(acceptedFiles => {
-    const reader = new FileReader();
+    const accentedFile = acceptedFiles[0];
 
-    reader.onabort = () => console.log('file reading was aborted');
-    reader.onerror = () => console.log('file reading has failed');
-    reader.onload = async () => {
-      const binaryStr = reader.result;
-    };
+    getPresignedUrl({ variables: {
+      filename: accentedFile.name,
+      filetype: accentedFile.type,
+    }})
 
-    acceptedFiles.forEach((file: any) => reader.readAsBinaryString(file));
+    setFile(accentedFile);
   }, []);
+
+  useEffect(() => {
+    console.log('data');
+    console.log(data);
+
+    const options = {
+      'Content-Type': file.type,
+    }
+
+    axios.put(data.getUrl, file, options);
+  }, [data])
   const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop });
-  const { loading, error, data = {} } = useQuery(GET_LIST, {
+  const { loading, error, data: getListData = {} } = useQuery(GET_LIST, {
     fetchPolicy: 'network-only',
   });
 
@@ -65,8 +81,8 @@ export default () => {
         )}
       </div>
       <List>
-        {data.getList &&
-          data.getList.map(v => (
+        {getListData.getList &&
+          getListData.getList.map(v => (
             <ListItem>
               <ListItemAvatar>
                 <Avatar>
